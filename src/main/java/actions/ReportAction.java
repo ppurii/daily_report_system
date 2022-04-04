@@ -14,6 +14,7 @@ import constants.JpaConst;
 import constants.MessageConst;
 import services.ReportService;
 
+
 /**
  * 日報に関する処理を行うActionクラス
  *
@@ -113,7 +114,8 @@ public void create() throws ServletException, IOException {
                 getRequestParam(AttributeConst.REP_TITLE),
                 getRequestParam(AttributeConst.REP_CONTENT),
                 null,
-                null);
+                null,
+                0); //←追加
 
         //日報情報登録
         List<String> errors = service.create(rv);
@@ -187,8 +189,9 @@ public void edit() throws ServletException, IOException {
         //編集画面を表示
         forward(ForwardConst.FW_REP_EDIT);
     }
-
 }
+
+
 /**
  * 更新を行う
  * @throws ServletException
@@ -201,11 +204,6 @@ public void update() throws ServletException, IOException {
 
         //idを条件に日報データを取得する
         ReportView rv = service.findOne(toNumber(getRequestParam(AttributeConst.REP_ID)));
-
-        //入力された日報内容を設定する
-        rv.setReportDate(toLocalDate(getRequestParam(AttributeConst.REP_DATE)));
-        rv.setTitle(getRequestParam(AttributeConst.REP_TITLE));
-        rv.setContent(getRequestParam(AttributeConst.REP_CONTENT));
 
         //日報データを更新する
         List<String> errors = service.update(rv);
@@ -230,4 +228,36 @@ public void update() throws ServletException, IOException {
 
         }
     }
-}}
+}
+
+//いいね　追加
+/**
+* いいね数を1加算する
+* @throws ServletException
+* @throws IOException
+*/
+
+public void likeCount() throws ServletException, IOException {
+
+    //idを条件に日報データを取得する
+    ReportView rv = service.findOne(toNumber(getRequestParam(AttributeConst.REP_ID)));
+
+    //現在のいいね数に1を加算する
+    int likeCnt = rv.getLikeCount() + 1;
+
+    //加算したいいね数を設定する
+    rv.setLikeCount(likeCnt);
+
+
+    //日報データを更新する
+    service.update(rv);
+
+
+            //セッションに更新完了のフラッシュメッセージを設定
+            putSessionScope(AttributeConst.FLUSH, MessageConst.I_LIKECOUNT.getMessage());
+
+            //一覧画面にリダイレクト
+            redirect(ForwardConst.ACT_REP, ForwardConst.CMD_INDEX);
+        }
+    }
+
